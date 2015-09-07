@@ -43,7 +43,8 @@ class InstallLoadBalancer:
         
     def check_rpms(self):
         """
-        check is rpms exist and if already installed
+        check is rpms exist and if they are already installed.
+        If already installed, then nothing needs to be done.
         """
         try:
             self.rpms = [self.path + '/' + rpm for rpm in RPMS]
@@ -65,8 +66,11 @@ class InstallLoadBalancer:
                 try:
                     subprocess.check_call(["rpm", "-q", name[:-4]])
                 except:
-                    print(name, "is not installed")
-                    subprocess.check_call(["rpm", "-ivh", self.path + "/" + name])
+                    print(name, "is not installed, instlling now")
+                    try:
+                        subprocess.check_call(["rpm", "-ivh", self.path + "/" + name])
+                    except:
+                        print("rpm:", name, " could not be installed")
             print("rpms installed")
 
 if __name__ == '__main__':
