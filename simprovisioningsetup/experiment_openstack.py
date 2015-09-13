@@ -7,18 +7,35 @@ import os.path
 import re
 import subprocess
 
+RPM_PATH = "/var/opt/dsp/images/lb/"
+ORACLE_DEPS_PATH = RPM_PATH
+KEEPALIVED_DEPS_PATH = RPM_PATH + "keepalived_deps/"
+DEP_RPMS = ["net-snmp-5.5-54.el6.x86_64.rpm",
+             "net-snmp-libs-5.5-54.el6.x86_64.rpm",
+             "lm_sensors-3.1.1-17.el6.x86_64.rpm",
+              "lm_sensors-libs-3.1.1-17.el6.x86_64.rpm"]
 RPMS = ['haproxy-1.5.2-2.el6.x86_64.rpm', 'keepalived-1.2.13-4.el6.x86_64.rpm']
+
+DEP_RPMS_PATH = [KEEPALIVED_DEPS_PATH + deps for deps in DEP_RPMS]
+RPMS_PATH = [RPM_PATH + rpm for rpm in RPMS]
+
+ALL_RPMS_PATH = list()
+
 HOSTNAME_KEY = r"-lb[0-9]+$"
+
+def get_rpms_list():
+    DEP_RPMS_PATH.extend(RPMS_PATH)
+    ALL_RPMS_PATH = DEP_RPMS_PATH
+    return ALL_RPMS_PATH
 
 class InstallLoadBalancer:
     """
     installs load balancer rpms idempotently if the hostname has "*lb*"
     """
-    def __init__(self, path=""):
-        if not path:
+    def __init__(self, all_rpms_path=""):
+        if not all_rpms_path:
             raise ValueError
-        self.path = path
-        
+        self.all_rpms_path = all_rpms_path
         
     def check_hostname(self):
         """
@@ -26,7 +43,7 @@ class InstallLoadBalancer:
         """
         try:
             self.hostname = socket.gethostname()
-            print("hostname:", self.hostname, "path:", self.path)
+            print("hostname:", self.hostname, "all_rpms_path:", self.all_rpms_path)
         except:
             raise Exception("problem with getting hostname")
         
@@ -47,8 +64,7 @@ class InstallLoadBalancer:
         If already installed, then nothing needs to be done.
         """
         try:
-            self.rpms = [self.path + '/' + rpm for rpm in RPMS]
-            for files in self.rpms:
+            for files in self.all_rpms_path:
                 if not os.path.exists(files):
                     raise IOError
             return True
@@ -62,18 +78,18 @@ class InstallLoadBalancer:
         install rpms
         """
         if self.check_hostname() and self.check_rpms():
-            for name in RPMS:
+            for name in self.all_rpms_path:
                 try:
                     subprocess.check_call(["rpm", "-q", name[:-4]])
                 except:
                     print(name, "is not installed, instlling now")
                     try:
-                        subprocess.check_call(["rpm", "-ivh", self.path + "/" + name])
+                        subprocess.check_call(["rpm", "-ivh", name])
                     except:
                         print("rpm:", name, " could not be installed")
             print("rpms installed")
 
 if __name__ == '__main__':
     print("hello world")
-    installer = InstallLoadBalancer(path = "/var/opt/dsp/images/lb")
+    installer = InstallLoadBalancer(all_rpms_path = get_rpms_list())
     installer.install_rpms()
