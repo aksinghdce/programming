@@ -1,3 +1,7 @@
+# Practice of Python Skills with YouTube Video Creation Pipeline:
+
+Reade my gists here - https://gist.github.com/aksinghdce
+
 # Fundamental Concepts for Quick Look-Up
 
 ## geeksforgeeks.org | Python Tricks for Competitive Programming
